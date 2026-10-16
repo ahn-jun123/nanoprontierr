@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Ocean Acidification & Neutralization Simulator</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--tx:#14202e;--mu:#5b6b7d;--bd:#dde5ee;--ac:#0b7fd6;--ok:#2e9e5b;--bad:#d64545;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d141c;--card:#16202b;--tx:#e8eef5;--mu:#93a4b6;--bd:#26343f;--ac:#4aa8f0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d141c;--card:#16202b;--tx:#e8eef5;--mu:#93a4b6;--bd:#26343f;--ac:#4aa8f0;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Segoe UI","Noto Sans KR","Malgun Gothic",sans-serif;line-height:1.5}
+header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--bd);background:var(--card)}
+h1{font-size:clamp(14px,2.2vw,19px);margin:0}h1 small{display:block;color:var(--mu);font-weight:500;font-size:.78em}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:6px 12px}
+button:hover{border-color:var(--ac)}
+main{display:grid;grid-template-columns:270px minmax(0,1fr) 340px;gap:14px;padding:14px;max-width:1400px;margin:auto}
+@media(max-width:1000px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px}
+h2{font-size:14px;margin:0 0 10px;color:var(--mu);letter-spacing:.02em}
+.item{display:block;width:100%;text-align:left;margin-bottom:8px;padding:9px 10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);cursor:grab;user-select:none}
+.item:active{cursor:grabbing}.item b{display:block;font-size:13.5px}.item span{font-size:11.5px;color:var(--mu)}
+.tag{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:99px;margin-bottom:3px;color:#fff;font-weight:600}
+.cE{background:#0b7fd6}.cS{background:#8a4fd6}.cA{background:#e07a1f}
+.item.on{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
+.stats{display:flex;gap:10px;margin-bottom:10px}
+.stat{flex:1;text-align:center;padding:8px;border-radius:12px;background:var(--bg);border:1px solid var(--bd)}
+.stat div{font-size:11.5px;color:var(--mu)}.stat strong{font-size:clamp(22px,4vw,32px)}
+#tank{position:relative;height:min(52vh,400px);min-height:280px;margin:0 auto;max-width:420px;border:3px solid var(--mu);border-top:none;border-radius:0 0 40px 40px;overflow:hidden;background:rgba(150,180,210,.1)}
+#tank.over{outline:3px dashed var(--ac)}
+#liq{position:absolute;left:0;right:0;bottom:0;height:78%;transition:background .2s;opacity:.92}
+#liq:before{content:"";position:absolute;top:-6px;left:0;right:0;height:12px;background:inherit;border-radius:50%;filter:brightness(1.15)}
+#sed{position:absolute;left:0;right:0;bottom:0;height:0;background:#f5f5f0;transition:height .6s}
+.p{position:absolute;border-radius:50%;pointer-events:none}
+.chip{position:absolute;top:10px;padding:4px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--card);border:1px solid var(--bd);display:none;z-index:3}
+#chipS{left:10px}#chipP{right:10px}
+#status{text-align:center;margin:10px 0 4px;font-weight:600}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.bar{height:10px;border-radius:6px;margin:10px auto 0;max-width:420px;background:linear-gradient(90deg,#e53935,#f4511e,#fdd835,#7cb342,#26a69a,#1e88e5,#7e57c2)}
+.scale{display:flex;justify-content:space-between;max-width:420px;margin:2px auto;font-size:11px;color:var(--mu)}
+.eq{font-family:ui-monospace,Consolas,monospace;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px;font-size:13px;word-break:break-word}
+.sec{margin-top:10px;font-size:13px}.sec b{display:block;font-size:12px;margin-bottom:2px}
+#log{font-size:12px;color:var(--mu);margin:0;padding-left:16px}
+svg text{fill:var(--mu);font-size:9px}
+</style>
+</head>
+<body>
+<header>
+<h1>Smart Ocean Acidification &amp; Neutralization Simulator<small>(화학공학 × 전기전자공학 융합)</small></h1>
+<button id="theme">🌓 테마</button>
+</header>
+<main>
+<section class="card">
+<h2>🧰 도구함 (끌어다 놓거나 클릭!)</h2>
+<div id="tools"></div>
+</section>
+
+<section class="card">
+<div class="stats">
+<div class="stat"><div>현재 pH</div><strong id="phv">7.40</strong></div>
+<div class="stat"><div>CO₂ 농도 (ppm)</div><strong id="cov">800</strong></div>
+</div>
+<div id="tank">
+<div class="chip" id="chipS">📡 pH <span id="sv">-</span></div>
+<div class="chip" id="chipP">⚙️ 펌프 대기</div>
+<div id="liq"><div id="sed"></div></div>
+</div>
+<div class="bar"></div>
+<div class="scale"><span>pH 4 산성</span><span>7 중성</span><span>10 염기성</span></div>
+<div id="status"></div>
+<div class="row"><button id="emit">🏭 CO₂ 배출 유입</button><button id="reset">🔄 처음부터</button></div>
+</section>
+
+<section class="card">
+<h2>📊 pH 변화 그래프</h2>
+<svg id="chart" viewBox="0 0 300 140" width="100%"></svg>
+<h2 style="margin-top:12px">⚗️ 화학 반응식</h2>
+<div class="eq" id="eq">도구를 수조에 넣어 보세요!</div>
+<div class="sec"><b>🧪 화학공학 원리</b><span id="che">-</span></div>
+<div class="sec"><b>🔌 전기전자공학 원리 (센싱/제어)</b><span id="ee">-</span></div>
+<div class="sec"><b>🌊 쉬운 설명</b><span id="kid">바다가 CO₂를 많이 흡수하면 산성이 되어 조개와 산호가 힘들어져요.</span></div>
+<div class="sec"><b>📝 기록</b><ul id="log"></ul></div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const I={
+mg:{n:'Mg(OH)₂ 슬러리',t:'화학공학 OAE',c:'cE',d:'독성이 적고 서서히 pH를 높이는 친환경 알칼리화',
+eq:'Mg(OH)₂ + 2CO₂ → Mg²⁺ + 2HCO₃⁻\nH⁺ + OH⁻ → H₂O',
+che:'물에 조금씩만 녹아 OH⁻를 천천히 내놓아요. OH⁻가 H⁺를 없애고 CO₂는 탄산수소이온(HCO₃⁻)으로 바뀌어 바다의 알칼리도가 늘어나요(해양 알칼리 강화, OAE). 급격한 pH 변화가 없어 생물에게 안전해요.',
+ee:'슬러리 주입량은 유량 센서와 밸브로 정밀하게 조절해요. 천천히 녹는 성질 덕분에 제어가 안정적이에요.',
+kid:'식초 맛 바다에 약한 비누물을 천천히 타서 순하게 되돌리는 느낌이에요.'},
+ca:{n:'Ca(OH)₂ 반응액',t:'화학공학 CCU',c:'cE',d:'CO₂를 고체 CaCO₃로 침전·자원화',
+eq:'Ca(OH)₂ + CO₂ → CaCO₃↓ + H₂O',
+che:'소석회가 CO₂와 만나 물에 안 녹는 흰색 탄산칼슘(CaCO₃) 침전이 돼요. CO₂가 고체로 갇혀 제거되고, 침전물은 시멘트·건축 재료로 재활용(CCU)할 수 있어요.',
+ee:'반응조의 탁도·pH를 센서로 감시해 침전이 끝나는 시점을 판단하고 침전물 배출 밸브를 제어해요.',
+kid:'CO₂를 돌멩이(석회석)로 바꿔서 가둬 버리는 마법이에요!'},
+am:{n:'아민계 흡수제 (R-NH₂)',t:'화학공학 포집',c:'cE',d:'배출원에서 CO₂를 선택 포집',
+eq:'2 R-NH₂ + CO₂ ⇌ R-NH-COO⁻ + R-NH₃⁺',
+che:'아민의 질소가 CO₂와 결합해 카바메이트를 만들어요. 가열하면 CO₂를 다시 내놓아 흡수제를 재사용할 수 있어요(흡수탑-재생탑). 바다로 들어가기 전에 CO₂ 유입을 줄여요.',
+ee:'흡수탑 온도·유량 센서와 히터 제어(PID)로 흡수/재생 온도를 정확히 맞춰요.',
+kid:'CO₂만 쏙쏙 잡아가는 스펀지 같은 소재예요. 잠시 CO₂ 유입이 줄어들어요.'},
+bf:{n:'인산염 완충용액',t:'화학공학 완충',c:'cE',d:'H⁺ 농도 변화를 억제',
+eq:'H₂PO₄⁻ ⇌ H⁺ + HPO₄²⁻',
+che:'산이 들어오면 HPO₄²⁻가 H⁺를 받아들이고, 염기가 들어오면 H₂PO₄⁻가 H⁺를 내놓아 평형이 이동해요(르샤틀리에 원리). pH가 급하게 변하지 않아요.',
+ee:'완충 용액은 센서 신호의 흔들림을 줄여 제어 시스템이 더 안정적으로 동작하게 도와요.',
+kid:'pH의 충격을 흡수하는 쿠션이에요. 대신 올리는 힘도 약해져요.'},
+se:{n:'IoT pH 센서 모듈',t:'전기전자 센서',c:'cS',d:'실시간 pH를 시계열 그래프로',
+eq:'E = E₀ − 0.0592 × pH  (V, 25℃)',
+che:'유리 전극이 H⁺ 농도에 따라 전압을 만들어요(네른스트 식). pH가 1 오를 때마다 약 59 mV 변해요.',
+ee:'전극의 미세 전압 → 증폭기 → ADC(아날로그-디지털 변환) → 마이크로컨트롤러가 pH로 계산 → Wi-Fi로 전송해 그래프로 보여줘요.',
+kid:'바닷물 건강 체온계예요. 그래프가 켜졌어요!'},
+pu:{n:'자동 마이크로 펌프',t:'전기전자 제어',c:'cS',d:'pH가 낮아지면 자동 중화제 투입',
+eq:'오차 e = 7.8 − pH\ne > 0 이면 펌프 ON → Mg(OH)₂ 소량 투입',
+che:'폐루프(Closed-Loop) 중화 공정이에요. 필요한 만큼만 중화제를 넣어 약품 낭비와 과투입을 막아요.',
+ee:'센서(입력) → 컨트롤러(비교·판단) → 펌프 드라이버(PWM) → 수조 → 다시 센서로 되돌아오는 피드백 제어예요. 센서 모듈이 꼭 필요해요!',
+kid:'pH가 7.8보다 낮아지면 로봇이 알아서 약을 넣어 줘요.'}
+};
+const S0={ph:7.4,co2:800,buf:1,se:false,pu:false,amT:0,ca:0,data:[],pumpN:0};
+let S={...S0,data:[]},disp=7.4,dco=800;
+const stops=[[4,'#e53935'],[5,'#f4511e'],[6,'#fdd835'],[7,'#7cb342'],[8,'#26a69a'],[9,'#1e88e5'],[10,'#7e57c2']];
+const hex=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
+function col(p){p=Math.max(4,Math.min(10,p));for(let i=0;i<stops.length-1;i++){const a=stops[i],b=stops[i+1];if(p<=b[0]){const t=(p-a[0])/(b[0]-a[0]),x=hex(a[1]),y=hex(b[1]);return'rgb('+x.map((v,k)=>Math.round(v+(y[k]-v)*t)).join(',')+')'}}return stops[6][1]}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function chg(dpH,dC){S.ph=clamp(S.ph+dpH*S.buf,4,10);S.co2=clamp(S.co2+dC,280,2000)}
+function addCO2(d){chg(-d*0.0008,d)}
+function spawn(kind,n){const tk=$('tank'),w=tk.clientWidth,h=tk.clientHeight;
+for(let i=0;i<n;i++){const e=document.createElement('div');e.className='p';const s=6+Math.random()*8,x=20+Math.random()*(w-40);
+e.style.cssText='width:'+s+'px;height:'+s+'px;left:'+x+'px;';let kf,d=1500+Math.random()*1200,dl=i*90;
+if(kind==='drop'){e.style.background='#fff';e.style.top='0';kf=[{transform:'translateY(0)'},{transform:'translateY('+h*.25+'px)',opacity:.3}]}
+else if(kind==='pre'){e.style.background='#fafaf5';e.style.top='25%';kf=[{transform:'translateY(0)'},{transform:'translateY('+h*.7+'px)',opacity:.9}]}
+else if(kind==='in'){e.style.background='#444';e.style.opacity=.6;e.style.top='0';kf=[{transform:'translateY(0)'},{transform:'translateY('+h*.5+'px)',opacity:0}]}
+else{e.style.background='rgba(255,255,255,.7)';e.style.bottom='0';kf=[{transform:'translateY(0)'},{transform:'translateY(-'+h*.75+'px)',opacity:0}]}
+$('tank').appendChild(e);e.animate(kf,{duration:d,delay:dl,fill:'both'}).onfinish=()=>e.remove()}}
+function log(t){const li=document.createElement('li');li.textContent=t;const l=$('log');l.prepend(li);while(l.children.length>5)l.lastChild.remove()}
+function show(id){const o=I[id];$('eq').textContent=o.eq;$('che').textContent=o.che;$('ee').textContent=o.ee;$('kid').textContent=o.kid}
+function mark(){['se','pu'].forEach(k=>document.querySelector('[data-id='+k+']').classList.toggle('on',S[k]));$('chipS').style.display=S.se?'block':'none';$('chipP').style.display=S.pu?'block':'none'}
+function dose(id){const o=I[id];show(id);
+if(id==='mg'){chg(.25,-40);spawn('drop',6);spawn('bub',4);log('Mg(OH)₂ 투입: pH 서서히 상승')}
+if(id==='ca'){chg(.45,-120);S.ca++;spawn('drop',5);spawn('pre',14);$('sed').style.height=Math.min(S.ca*14,70)+'px';log('Ca(OH)₂ 투입: CaCO₃ 침전 생성')}
+if(id==='am'){S.amT=30;chg(.05,-200);spawn('bub',10);log('아민 흡수제: CO₂ 포집, 유입 30초간 감소')}
+if(id==='bf'){S.buf=.45;spawn('drop',4);log('인산염 완충용액: pH 변화가 둔해져요')}
+if(id==='se'){S.se=true;spawn('bub',4);log('IoT 센서 장착: 실시간 측정 시작')}
+if(id==='pu'){S.pu=true;spawn('drop',3);log(S.se?'자동 펌프 가동: pH 7.8 미만이면 자동 중화':'펌프는 장착됐어요! 센서가 없어 신호를 못 받아요. 센서를 추가하세요')}
+mark()}
+$('tools').innerHTML=Object.keys(I).map(k=>{const o=I[k];return '<div class="item" draggable="true" data-id="'+k+'"><span class="tag '+o.c+'">'+o.t+'</span><b>'+o.n+'</b><span>'+o.d+'</span></div>'}).join('');
+document.querySelectorAll('.item').forEach(e=>{e.addEventListener('dragstart',ev=>ev.dataTransfer.setData('text/plain',e.dataset.id));e.addEventListener('click',()=>dose(e.dataset.id))});
+const tk=$('tank');
+tk.addEventListener('dragover',e=>{e.preventDefault();tk.classList.add('over')});
+tk.addEventListener('dragleave',()=>tk.classList.remove('over'));
+tk.addEventListener('drop',e=>{e.preventDefault();tk.classList.remove('over');const id=e.dataTransfer.getData('text/plain');if(I[id])dose(id)});
+$('emit').onclick=()=>{addCO2(250);spawn('in',8);log('배출원에서 CO₂ 유입! pH 하락');$('eq').textContent='CO₂ + H₂O ⇌ H₂CO₃ ⇌ H⁺ + HCO₃⁻';$('che').textContent='CO₂가 물에 녹으면 탄산(H₂CO₃)이 되고, 이것이 H⁺를 내놓아 pH가 내려가요. 이것이 해양 산성화예요.';$('ee').textContent='센서를 달아 pH를 감시하고 펌프로 자동 중화할 수 있어요.';$('kid').textContent='탄산음료처럼 바다가 시큼해지고 있어요!'};
+$('reset').onclick=()=>{S={...S0,data:[]};disp=7.4;$('sed').style.height='0';$('log').innerHTML='';mark()};
+$('theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=d?'light':'dark'};
+setInterval(()=>{
+S.co2=clamp(S.co2+10*(S.amT>0?.2:1),280,2000);S.ph=clamp(S.ph-0.008*(S.amT>0?.2:1)*S.buf,4,10);if(S.amT>0)S.amT--;
+if(S.pu&&S.se&&S.ph<7.8){S.ph=clamp(S.ph+.1*S.buf,4,10);S.co2-=15;S.pumpN++;$('chipP').textContent='⚙️ 펌프 작동 중';spawn('drop',2)}else $('chipP').textContent='⚙️ 펌프 대기';
+if(S.se){S.data.push(S.ph);if(S.data.length>60)S.data.shift();draw()}},1000);
+function draw(){const d=S.data,lo=6.5,hi=9,X=i=>30+i*(260/59),Y=v=>120-(clamp(v,lo,hi)-lo)/(hi-lo)*105;
+let g='<line x1="30" y1="15" x2="30" y2="120" stroke="currentColor" opacity=".3"/><line x1="30" y1="120" x2="290" y2="120" stroke="currentColor" opacity=".3"/>';
+[7,8,9].forEach(v=>g+='<text x="4" y="'+(Y(v)+3)+'">'+v+'</text><line x1="30" x2="290" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="currentColor" opacity=".1"/>');
+if(S.pu)g+='<line x1="30" x2="290" y1="'+Y(7.8)+'" y2="'+Y(7.8)+'" stroke="#e07a1f" stroke-dasharray="4 3"/><text x="232" y="'+(Y(7.8)-3)+'">임계 7.8</text>';
+g+='<polyline fill="none" stroke="#0b7fd6" stroke-width="2" points="'+d.map((v,i)=>X(i)+','+Y(v)).join(' ')+'"/><text x="140" y="135">최근 60초</text>';
+$('chart').innerHTML=g}
+$('chart').innerHTML='<text x="60" y="75">📡 센서 모듈을 수조에 넣으면 그래프가 시작돼요</text>';
+function frame(){disp+=(S.ph-disp)*.08;dco+=(S.co2-dco)*.1;
+$('liq').style.background=col(disp);$('phv').textContent=disp.toFixed(2);$('cov').textContent=Math.round(dco);$('sv').textContent=disp.toFixed(2);
+const p=disp;$('status').textContent=p<7?'🔴 매우 위험: 조개·산호 껍데기가 녹아요':p<7.6?'🟠 산성화 주의: 해양 생물이 힘들어요':p<8?'🟡 조금 낮아요. 중화가 필요해요':p<8.35?'🟢 건강한 바다 (자연 pH ≈ 8.1)':'🔵 너무 알칼리! 과투입 주의';
+requestAnimationFrame(frame)}
+frame();mark();
+</script>
+</body>
+</html>
